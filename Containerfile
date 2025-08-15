@@ -19,9 +19,20 @@ RUN --mount=type=cache,dst=/var/cache/dnf \
     --mount=type=cache,dst=/var/cache/libdnf5 \
         /tmp/build-kmod-zfs.sh
 
+FROM quay.io/fedora/fedora:42 AS installer
+
+RUN --mount=type=cache,dst=/var/cache/dnf \
+    --mount=type=cache,dst=/var/cache/libdnf5 \
+    --mount=type=bind,from=builder,source=/var/cache/rpms/kmods/zfs,target=/tmp/kmods-zfs \
+    dnf install -y /tmp/kmods-zfs/*.rpm /tmp/kmods-zfs/other/*.rpm
 
 FROM quay.io/fedora/fedora-silverblue:42
 
-COPY --from=builder /var/cache/rpms/kmods/zfs/*.rpm /var/cache/rpms/kmods/zfs/other/*.rpm /tmp/akmod-zfs/
+RUN --mount=type=cache,dst=/var/cache/dnf \
+    --mount=type=cache,dst=/var/cache/libdnf5 \
+    --mount=type=bind,from=builder,source=/var/cache/rpms/kmods/zfs,target=/tmp/kmods-zfs \
+    rpm-ostree install -y /tmp/kmods-zfs/*.rpm /tmp/kmods-zfs/other/*.rpm
 
-RUN rpm-ostree install /tmp/akmod-zfs/*.rpm && ostree container commit
+COPY --from=installer /usr/lib/modules /usr/lib/modules
+
+RUN ostree container commit
