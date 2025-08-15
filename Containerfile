@@ -24,7 +24,9 @@ FROM quay.io/fedora/fedora:42 AS installer
 RUN --mount=type=cache,dst=/var/cache/dnf \
     --mount=type=cache,dst=/var/cache/libdnf5 \
     --mount=type=bind,from=builder,source=/var/cache/rpms/kmods/zfs,target=/tmp/kmods-zfs \
-    dnf install -y /tmp/kmods-zfs/*.rpm /tmp/kmods-zfs/other/*.rpm
+    --mount=type=bind,from=ref,source=/tmp/kernel-version,target=/tmp/kernel-version \
+    dnf install -y /tmp/kmods-zfs/*.rpm /tmp/kmods-zfs/other/*.rpm && \
+        depmod $(cat /tmp/kernel-version)
 
 FROM quay.io/fedora/fedora-silverblue:42
 
