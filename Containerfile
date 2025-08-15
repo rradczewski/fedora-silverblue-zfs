@@ -6,11 +6,9 @@ FROM quay.io/fedora/fedora:42 AS builder
 
 RUN --mount=type=cache,dst=/var/cache/dnf \
     --mount=type=cache,dst=/var/cache/libdnf5 \
-        dnf install -y gpg autoconf automake dkms git jq libtool ncompress python-cffi rpm-build
-COPY --from=ref /tmp/kernel-version /tmp/kernel-version
-RUN --mount=type=cache,dst=/var/cache/dnf \
-    --mount=type=cache,dst=/var/cache/libdnf5 \
-        dnf install -y kernel-$(cat /tmp/kernel-version)
+    --mount=type=bind,from=ref,source=/tmp/kernel-version,target=/tmp/kernel-version \
+        dnf install -y \
+            gpg autoconf automake dkms git jq libtool ncompress python-cffi rpm-build kernel-$(cat /tmp/kernel-version)
 
 COPY ./ublue-os_akmods/build_files/zfs/build-kmod-zfs.sh /tmp/
 
