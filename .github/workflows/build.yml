@@ -81,6 +81,9 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Build ISO
         uses: jasonn3/build-container-installer@main
         id: build
@@ -92,6 +95,8 @@ jobs:
           version: ${{ env.VERSION }}
           variant: ${{ env.VARIANT }}
           iso_name: ${{ env.IMAGE_NAME }}-${{ env.IMAGE_TAG }}-${{ env.VERSION }}.iso
+          repos: /github/workspace/installer/repos/zfs.repo /etc/yum.repos.d/fedora.repo /etc/yum.repos.d/fedora-updates.repo
+          additional_templates: /github/workspace/installer/lorax/zfs-packages-install.tmpl /github/workspace/installer/lorax/zfs-packages-postinstall.tmpl
 
       # This example is for uploading your ISO as a Github artifact. You can do something similar using any cloud storage, so long as you copy the output
       - name: Upload ISO as artifact
