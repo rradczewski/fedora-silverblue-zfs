@@ -95,8 +95,7 @@ jobs:
           version: ${{ env.VERSION }}
           variant: ${{ env.VARIANT }}
           iso_name: ${{ env.IMAGE_NAME }}-${{ env.IMAGE_TAG }}-${{ env.VERSION }}.iso
-          repos: /github/workspace/installer/repos/zfs.repo /etc/yum.repos.d/fedora.repo /etc/yum.repos.d/fedora-updates.repo
-          additional_templates: /github/workspace/installer/lorax/zfs-packages-install.tmpl /github/workspace/installer/lorax/zfs-packages-postinstall.tmpl
+          additional_templates: /github/workspace/installer/lorax/zfs-packages-0-repo.tmpl /github/workspace/installer/lorax/zfs-packages-1-install.tmpl /github/workspace/installer/lorax/zfs-packages-2-postinstall.tmpl
 
       # This example is for uploading your ISO as a Github artifact. You can do something similar using any cloud storage, so long as you copy the output
       - name: Upload ISO as artifact
