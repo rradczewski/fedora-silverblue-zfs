@@ -9,11 +9,7 @@ permissions:
   packages: write
 
 env:
-  ARCH: x86_64
-  VARIANT: silverblue
-  VERSION: "42"
   IMAGE_NAME: ${{ github.event.repository.name }}
-  IMAGE_TAG: edge
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   REGISTRY_USER: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ github.token }}
@@ -22,6 +18,8 @@ jobs:
   build-image:
     name: Build and push image
     runs-on: ubuntu-latest
+    outputs:
+      registry-path: ${{ steps.push.outputs.registry-path }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,35 +76,25 @@ jobs:
     needs: [build-image]
     permissions:
       contents: read
-      packages: write
-      id-token: write
+      packages: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Maximize build space
+        uses: ublue-os/remove-unwanted-software@v9
 
       - name: Build ISO
-        uses: jasonn3/build-container-installer@main
+        uses: ublue-os/titanoboa@main
         id: build
         with:
-          arch: ${{ env.ARCH}}
-          image_name: ${{ env.IMAGE_NAME}}
-          image_repo: ${{ env.IMAGE_REGISTRY }}
-          image_tag: ${{ env.IMAGE_TAG }}
-          version: ${{ env.VERSION }}
-          variant: ${{ env.VARIANT }}
-          iso_name: ${{ env.IMAGE_NAME }}-${{ env.IMAGE_TAG }}-${{ env.VERSION }}.iso
-          repos: /github/workspace/installer/zfs.repo /etc/yum.repos.d/fedora.repo /etc/yum.repos.d/fedora-updates.repo
-          additional_templates: /github/workspace/installer/lorax/zfs-packages-0-repo.tmpl /github/workspace/installer/lorax/zfs-packages-1-install.tmpl /github/workspace/installer/lorax/zfs-packages-2-postinstall.tmpl
+          image-ref: ${{ needs.build-image.outputs.registry-path }}
 
-      # This example is for uploading your ISO as a Github artifact. You can do something similar using any cloud storage, so long as you copy the output
-      - name: Upload ISO as artifact
-        id: upload
+      - name: Rename ISO
+        run: |
+          mkdir -p output
+          mv ${{ steps.build.outputs.iso-dest }} output/custom-image-$(date +%Y%m%d).iso
+          (cd output && sha256sum *.iso | tee CHECKSUMS)
+          
+      - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.iso_name }}
-          path: |
-            ${{ steps.build.outputs.iso_path }}/${{ steps.build.outputs.iso_name }}
-            ${{ steps.build.outputs.iso_path }}/${{ steps.build.outputs.iso_name }}-CHECKSUM
-          if-no-files-found: error
-          retention-days: 0
-          compression-level: 0
+          name: custom-iso
+          path: output/

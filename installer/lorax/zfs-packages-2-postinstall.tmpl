@@ -1,9 +1,0 @@
-<%page args="root"/>
-# Ensure ZFS kernel modules are built
-runcmd chroot ${root} dkms autoinstall -k $(ls ${root}/lib/modules)
-
-# Enable ZFS services
-runcmd systemctl --root=${root} enable zfs-import-cache.service
-runcmd systemctl --root=${root} enable zfs-import-scan.service
-runcmd systemctl --root=${root} enable zfs-mount.service
-runcmd systemctl --root=${root} enable zfs.target
