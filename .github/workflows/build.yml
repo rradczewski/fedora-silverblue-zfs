@@ -1,5 +1,7 @@
 name: Push to GHCR
 on:
+  schedule:
+    - cron: "0 0 * * 0"
   push:
     branches:
       - main
@@ -7,6 +9,8 @@ on:
 
 permissions:
   packages: write
+  id-token: write
+  attestations: write
 
 env:
   IMAGE_NAME: ${{ github.event.repository.name }}
@@ -66,6 +70,19 @@ jobs:
         with:
           tags: ${{ steps.build_image.outputs.tags }}
 
+      - name: Setup cosign
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        with:
+          cosign-release: "v2.6.0"
+      - name: Sign docker image
+        run: |
+          for tag in $TAGS; do
+            cosign sign --yes  $tag
+          done
+        env:
+          TAGS: ${{ steps.build_image.outputs.tags }}
+
+
       - name: Echo outputs
         run: |
           echo "${{ toJSON(steps.push.outputs) }}"
@@ -92,7 +109,7 @@ jobs:
           mkdir -p output
           mv ${{ steps.build.outputs.iso-dest }} output/custom-image-$(date +%Y%m%d).iso
           (cd output && sha256sum *.iso | tee CHECKSUMS)
-          
+
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
