@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-silverblue:42
+FROM quay.io/fedora/fedora-silverblue:43
 
 RUN --mount=type=cache,dst=/var/cache/dnf \
     --mount=type=cache,dst=/var/cache/libdnf5 \
